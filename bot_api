@@ -1,0 +1,1172 @@
+function createtermkClientGUI(mode) {
+    // Remove old GUI if exists
+    const old = document.getElementById("uiverseGui");
+    if (old) old.remove();
+
+    // Add style
+    const style = document.createElement("style");
+    style.textContent = `
+        #uiverseGui { position: fixed; padding: 1em; background: #f0f0f0; border-radius: .8em;
+            box-shadow: 4px 4px 12px #c5c5c5, -4px -4px 12px #ffffff; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 15px; user-select: none; font-family: Verdana, arial, helvetica, clean, sans-serif;
+            color: #090909; }
+        #uiverseGui .header { width: 100%; height: 5px; display: flex; justify-content: flex-end;
+            align-items: center; cursor: move; margin-bottom: 0; }
+        #uiverseGui .closeBtn { cursor: pointer; font-weight: bold; font-size: 14px;
+            background: transparent; border: none; color: #090909; }
+        #uiverseGui .title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px;
+            user-select: none; }
+        #uiverseGui .device-label, #uiverseGui .auto-label { font-size: 16px; font-weight: bold;
+            text-align: center; margin-bottom: 5px; user-select: none; }
+        #uiverseGui button.uiverseBtn { color: #090909; padding: .4em 1em; font-size: 16px; font-weight: bold;
+            border-radius: .5em; background: #e8e8e8; cursor: pointer; border: 1px solid #e8e8e8;
+            transition: all .3s ease; box-shadow: 6px 6px 12px #c5c5c5, -6px -6px 12px #ffffff;
+            display: block; user-select: none; margin-top: 2px; text-align: center; }
+        #uiverseGui button.uiverseBtn:hover { border: 1px solid #fff; }
+        #uiverseGui button.uiverseBtn:active { box-shadow: 4px 4px 12px #c5c5c5, -4px -4px 12px #ffffff; }
+        .checkbox-apple { position: relative; width: 50px; height: 25px; margin: 0 auto; user-select: none; }
+        .checkbox-apple input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .checkbox-apple label { position: absolute; top: 0; left: 0; width: 50px; height: 25px; border-radius: 50px;
+            background: linear-gradient(to bottom, #b3b3b3, #e6e6e6); cursor: pointer; transition: all .3s ease; }
+        .checkbox-apple label:after { content: ''; position: absolute; top: 1px; left: 1px; width: 23px; height: 23px;
+            border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: all .3s ease; }
+        .checkbox-apple input:checked + label { background: linear-gradient(to bottom, #4cd964, #5de24e); }
+        .checkbox-apple input:checked + label:after { transform: translateX(25px); }
+    `;
+    document.head.appendChild(style);
+
+    // GUI container
+    const gui = document.createElement("div");
+    gui.id = "uiverseGui";
+
+    // Header with close
+    const header = document.createElement("div");
+    header.className = "header";
+    const close = document.createElement("button");
+    close.className = "closeBtn";
+    close.textContent = "×";
+    close.onclick = () => {
+        gui.remove();
+        document.body.style.overflow = "";
+        document.removeEventListener("touchmove", preventScroll, { passive: false });
+    };
+    header.appendChild(close);
+    gui.appendChild(header);
+
+    // Title
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = "Term Client";
+    gui.appendChild(title);
+
+    if (mode === "autoMode") {
+        const label = document.createElement("div");
+        label.className = "auto-label";
+        label.textContent = "Auto Mode";
+        gui.appendChild(label);
+
+        // Apple checkbox
+        const wrap = document.createElement("div");
+        wrap.className = "checkbox-apple";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = "appleCheckbox";
+        const lbl = document.createElement("label");
+        lbl.htmlFor = "appleCheckbox";
+        wrap.appendChild(cb);
+        wrap.appendChild(lbl);
+        gui.appendChild(wrap);
+
+        cb.addEventListener("change", () => {
+            // Simulate pressing Y key to toggle auto mode
+            const event = new KeyboardEvent("keydown", {
+                key: "y",
+                keyCode: 89,
+                code: "KeyY",
+                bubbles: true,
+                cancelable: true
+            });
+            window.dispatchEvent(event);
+        });
+
+        const btn = document.createElement("button");
+        btn.className = "uiverseBtn";
+        btn.textContent = "Once";
+        btn.onclick = () => {
+            // Simulate pressing C key to process once
+            const event = new KeyboardEvent("keydown", {
+                key: "c",
+                keyCode: 67,
+                code: "KeyC",
+                bubbles: true,
+                cancelable: true
+            });
+            window.dispatchEvent(event);
+        };
+        gui.appendChild(btn);
+
+    } else {
+        const dlabel = document.createElement("div");
+        dlabel.className = "device-label";
+        dlabel.textContent = "Choose your device";
+        gui.appendChild(dlabel);
+
+        ["Mobile", "Computer"].forEach(t => {
+            const b = document.createElement("button");
+            b.className = "uiverseBtn";
+            b.textContent = t;
+            b.onclick = () => {
+                createtermkClientGUI("autoMode");
+            };
+            gui.appendChild(b);
+        });
+    }
+
+    document.body.appendChild(gui);
+
+    // Center GUI
+    const rect = gui.getBoundingClientRect();
+    gui.style.left = (window.innerWidth - rect.width) / 2 + "px";
+    gui.style.top = (window.innerHeight - rect.height) / 2 + "px";
+
+    // Drag logic
+    let drag = false, offX = 0, offY = 0;
+    function preventScroll(e) { if (drag) e.preventDefault(); }
+    function start(x, y) { drag = true; document.body.style.overflow = "hidden"; document.addEventListener("touchmove", preventScroll, { passive: false }); const rr = gui.getBoundingClientRect(); offX = x - rr.left; offY = y - rr.top; }
+    function move(x, y) { if (!drag) return; gui.style.left = x - offX + "px"; gui.style.top = y - offY + "px"; }
+    function stop() { drag = false; document.body.style.overflow = ""; document.removeEventListener("touchmove", preventScroll, { passive: false }); }
+
+    gui.addEventListener("mousedown", e => { if (!e.target.closest("button") && !e.target.closest("input") && !e.target.closest("label")) start(e.clientX, e.clientY); });
+    document.addEventListener("mousemove", e => move(e.clientX, e.clientY));
+    document.addEventListener("mouseup", stop);
+
+    gui.addEventListener("touchstart", e => { const t = e.touches[0]; if (!e.target.closest("button") && !e.target.closest("input") && !e.target.closest("label")) start(t.clientX, t.clientY); });
+    document.addEventListener("touchmove", e => { if (drag) { const t = e.touches[0]; move(t.clientX, t.clientY); } });
+    document.addEventListener("touchend", stop);
+}
+
+// ----------------- Gemini Script -----------------
+(function () {
+    'use strict';
+    console.clear();
+    // ------------------- CONFIG -------------------
+    const GITHUB_FILE_URL = "https://raw.githubusercontent.com/qpeyy/api/main/apis";
+    const model = "gemini-2.0-flash-exp";
+    // ------------------------------------------------
+
+    let API_KEY = null;
+    let autoModeActive = false;
+    let questionCounter = 0;
+    let apiChange = 0;
+    let apiKeysCache = [];
+    let isProcessing = false;
+    let lastKnownText = "";
+    let logTimeout = null;
+    let keyErrorCount = {};
+    let imageChoiceMap = {}; // Store mapping of image labels to elements
+
+    // ---------------- Logging ----------------
+    function log(msg) {
+        console.log(`[Gemini Helper] ${msg}`);
+
+        const oldBox = document.getElementById("__gemini_log");
+        if (oldBox) oldBox.remove();
+
+        const box = document.createElement("div");
+        box.id = "__gemini_log";
+        Object.assign(box.style, {
+            position: "fixed",
+            bottom: "10px",
+            right: "10px",
+            background: "#fff",
+            border: "1px solid #ccc",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            fontFamily: "monospace",
+            fontSize: "12px",
+            maxWidth: "600px",
+            zIndex: 999999,
+            whiteSpace: "pre-wrap",
+            transition: "opacity 0.3s ease"
+        });
+        box.textContent = msg;
+        document.body.appendChild(box);
+
+        clearTimeout(logTimeout);
+        logTimeout = setTimeout(() => {
+            if (box) {
+                box.style.opacity = "0";
+                setTimeout(() => box.remove(), 300);
+            }
+        }, 2000);
+    }
+
+    // ---------------- Label and Extract Image Choices ----------------
+    function labelImageChoices() {
+        // Clear previous mapping
+        imageChoiceMap = {};
+        
+        // Try GriddyLayout first
+        let container = document.querySelector(".GriddyLayout.TOP");
+        
+        // If not found, try VerticalLayout
+        if (!container) {
+            container = document.querySelector(".VerticalLayout");
+        }
+        
+        if (!container) return [];
+
+        const children = Array.from(container.children);
+        const imageChoices = [];
+        
+        children.forEach((child, index) => {
+            // Look for actual content images (not UI elements)
+            // Real images are typically in .raster-image containers or have .image-base class
+            const imgs = Array.from(child.querySelectorAll("img")).filter(img => {
+                const src = img.src || img.getAttribute("src") || "";
+                const imgClass = img.className || "";
+                
+                // Include images that are clearly content images
+                const isContentImage = imgClass.includes("image-base") || 
+                                      img.closest(".raster-image") ||
+                                      src.includes("/~media/");
+                
+                // Exclude UI elements
+                const isUIElement = src.includes("check_mark") || 
+                                   src.includes("icon") || 
+                                   src.includes("/svg/") ||
+                                   src.endsWith(".svg") ||
+                                   img.closest(".CheckMark") ||
+                                   img.closest(".practice-audio-button");
+                
+                return isContentImage && !isUIElement;
+            });
+            
+            if (imgs.length > 0) {
+                const label = `IMAGE_CHOICE_${index + 1}`;
+                
+                // Add data attribute to the parent element for clicking
+                child.setAttribute('data-image-choice', label);
+                
+                // Store the mapping
+                imageChoiceMap[label] = child;
+                
+                imageChoices.push({
+                    label: label,
+                    element: child,
+                    images: imgs
+                });
+                
+                log(`🏷️ Labeled choice as ${label} with ${imgs.length} image(s)`);
+            }
+        });
+        
+        return imageChoices;
+    }
+
+    // ---------------- Extract Images with Labels ----------------
+    async function getImagesFromQuestion() {
+        const el = document.querySelector(".question-component");
+        if (!el) return { questionImages: [], choiceImages: [] };
+
+        const questionImages = [];
+        const choiceImages = [];
+        
+        // First, label image choices in the answer area
+        const imageChoices = labelImageChoices();
+        
+        // Get actual content images from the question, excluding UI elements
+        const imgElements = Array.from(el.querySelectorAll("img")).filter(img => {
+            const src = img.src || img.getAttribute("src") || "";
+            const imgClass = img.className || "";
+            
+            // Include images that are clearly content images
+            const isContentImage = imgClass.includes("image-base") || 
+                                  img.closest(".raster-image") ||
+                                  src.includes("/~media/");
+            
+            // Exclude UI elements
+            const isUIElement = src.includes("check_mark") || 
+                               src.includes("icon") || 
+                               src.includes("/svg/") ||
+                               src.endsWith(".svg") ||
+                               img.closest(".CheckMark") ||
+                               img.closest(".practice-audio-button");
+            
+            return isContentImage && !isUIElement;
+        });
+
+        for (const img of imgElements) {
+            try {
+                // Check if this image is part of a choice
+                let isChoiceImage = false;
+                for (const choice of imageChoices) {
+                    if (choice.images.includes(img)) {
+                        isChoiceImage = true;
+                        break;
+                    }
+                }
+                
+                // Get image source
+                let imgSrc = img.src || img.getAttribute("src");
+                if (!imgSrc) continue;
+
+                log(`🖼️ Found image: ${imgSrc.substring(0, 50)}...`);
+
+                // Convert image to base64
+                const base64Data = await imageToBase64(imgSrc);
+                if (base64Data) {
+                    const imageData = {
+                        inlineData: {
+                            mimeType: getMimeType(imgSrc),
+                            data: base64Data
+                        }
+                    };
+                    
+                    if (isChoiceImage) {
+                        choiceImages.push(imageData);
+                    } else {
+                        questionImages.push(imageData);
+                    }
+                    
+                    log(`✅ Image converted to base64`);
+                }
+            } catch (err) {
+                log(`❌ Error processing image: ${err.message}`);
+            }
+        }
+
+        return { questionImages, choiceImages, imageChoices };
+    }
+
+    // ---------------- Convert Image to Base64 ----------------
+    async function imageToBase64(url) {
+        try {
+            // Fetch image
+            const response = await fetch(url);
+            const blob = await response.blob();
+
+            // Convert blob to base64
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    // Remove data URL prefix (e.g., "data:image/png;base64,")
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        } catch (err) {
+            log(`❌ Failed to convert image: ${err.message}`);
+            return null;
+        }
+    }
+
+    // ---------------- Get MIME Type ----------------
+    function getMimeType(url) {
+        const ext = url.split('.').pop().split('?')[0].toLowerCase();
+        const mimeTypes = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'bmp': 'image/bmp'
+        };
+        return mimeTypes[ext] || 'image/jpeg';
+    }
+
+    // ---------------- Extract Question Text ----------------
+    function getQuestionText() {
+        const el = document.querySelector(".question-component");
+        if (!el) {
+            log("🔴 Question element not found.");
+            return null;
+        }
+
+        let output = "";
+        function walk(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                const t = node.textContent.trim();
+                if (
+                    t &&
+                    t !== "=" &&
+                    t.toLowerCase() !== "submit" &&
+                    !/^\s*(Created with Snap|#|\.|;)/i.test(t)
+                ) {
+                    output += t + " ";
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const cls = node.classList?.value || "";
+                const tag = node.tagName?.toLowerCase();
+
+                if (cls.includes("practice-audio-button has-inner-translation-button")) return;
+                if (cls.includes("practice-audio-button-svg")) return;
+                if (tag === "style" || tag === "script") return;
+
+                if (cls.includes("old-superscript-in-expression")) {
+                    const exponent = node.innerText.trim();
+                    output = output.trimEnd();
+                    output += "^" + exponent + " ";
+                } else {
+                    node.childNodes.forEach(walk);
+                }
+            }
+        }
+
+        walk(el);
+        return output.trim();
+    }
+
+    // ---------------- Get Target Element Text ----------------
+    function getTargetElementText() {
+        let targetEl = document.getElementById("yui_3_18_1_1_1761275887189_552");
+        if (!targetEl) {
+            targetEl = document.querySelector(".question-component");
+        }
+        return targetEl ? targetEl.innerText.trim() : "";
+    }
+
+    // ---------------- Wait for Text Change ----------------
+    async function waitForTextChange(previousText, maxWaitTime = 30000) {
+        log("⏳ Waiting for page content to change...");
+        const startTime = Date.now();
+        
+        return new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                const currentText = getTargetElementText();
+                const elapsed = Date.now() - startTime;
+                
+                if (currentText !== previousText && currentText.length > 0) {
+                    clearInterval(checkInterval);
+                    log("✅ Content changed! Proceeding...");
+                    resolve(true);
+                } else if (elapsed > maxWaitTime) {
+                    clearInterval(checkInterval);
+                    log("⚠️ Timeout waiting for content change.");
+                    resolve(false);
+                }
+            }, 100);
+        });
+    }
+
+    // ---------------- Fetch API Keys ----------------
+    async function fetchKeyFromGitHub(forceRefresh = false) {
+        if (apiKeysCache.length === 0 || forceRefresh) {
+            const frame = document.createElement("iframe");
+            frame.style.display = "none";
+            frame.src = "/dv3/" + Math.random().toString(36).slice(2);
+            document.body.appendChild(frame);
+
+            await new Promise(r => {
+                const timeout = setTimeout(r, 3000);
+                frame.onload = () => { clearTimeout(timeout); r(); };
+            });
+
+            const mretContext = frame.contentWindow;
+            const fetchFunc = mretContext?.fetch?.bind(mretContext) || window.fetch.bind(window);
+
+            log("📦 Fetching API keys from GitHub...");
+            try {
+                const res = await fetchFunc(GITHUB_FILE_URL + "?" + Date.now());
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const text = await res.text();
+                apiKeysCache = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+                if (!apiKeysCache.length) throw new Error("No keys found");
+            } catch (err) {
+                log(`❌ Key fetch failed: ${err.message}`);
+                return null;
+            } finally {
+                frame.remove();
+            }
+        }
+
+        if (!API_KEY || apiChange >= 3) {
+            API_KEY = apiKeysCache[Math.floor(Math.random() * apiKeysCache.length)];
+            apiChange = 0;
+            log("🔁 Changed to a new API key.");
+        }
+
+        const visibleKey = API_KEY.length > 10
+            ? `${API_KEY.slice(0, 5)}...${API_KEY.slice(-5)}`
+            : API_KEY;
+        log(`🔑 Using API key: ${visibleKey}`);
+        return API_KEY;
+    }
+
+    // ---------------- Get Available Choices ----------------
+    function getAvailableChoices() {
+        // Try GriddyLayout first
+        let container = document.querySelector(".GriddyLayout.TOP");
+        
+        // If not found, try VerticalLayout
+        if (!container) {
+            container = document.querySelector(".VerticalLayout");
+        }
+        
+        if (!container) return { choices: null, isMultipleSelect: false };
+        
+        const choices = [];
+        const children = Array.from(container.children);
+        let isMultipleSelect = false;
+        
+        children.forEach((child, index) => {
+            const text = child.innerText.trim();
+            
+            // Check if this choice has an image label
+            const imageLabel = child.getAttribute('data-image-choice');
+            
+            if (imageLabel) {
+                // If it has an image, use the label
+                choices.push(imageLabel);
+            } else if (text && text.length > 0 && text !== "Submit") {
+                // Otherwise use the text
+                choices.push(text);
+            }
+            
+            // Check if any child has MULTIPLE_SELECT class
+            if (child.className && child.className.includes('MULTIPLE_SELECT')) {
+                isMultipleSelect = true;
+            }
+            // Also check descendants for SelectableTile with MULTIPLE_SELECT
+            if (child.querySelector && child.querySelector('.SelectableTile.MULTIPLE_SELECT')) {
+                isMultipleSelect = true;
+            }
+        });
+        
+        return {
+            choices: choices.length > 0 ? choices : null,
+            isMultipleSelect: isMultipleSelect
+        };
+    }
+
+    // ---------------- Get Answer from Gemini ----------------
+    async function getAnswerFromGemini(question, apiKey) {
+        // Get images from the question
+        const { questionImages, choiceImages, imageChoices } = await getImagesFromQuestion();
+        
+        // Check if there are multiple choice options
+        const choicesData = getAvailableChoices();
+        const choices = choicesData.choices;
+        const isMultipleSelect = choicesData.isMultipleSelect;
+        let prompt;
+        
+        // Only consider it an image choice question if there are actually image choices
+        const hasImageChoices = imageChoices.length > 0 && choiceImages.length > 0;
+        
+        if (choices && choices.length > 0) {
+            if (hasImageChoices) {
+                // Special handling for image choices
+                if (isMultipleSelect) {
+                    prompt = `Look at the images provided in the question. Then look at the choice images. Each choice image is labeled (IMAGE_CHOICE_1, IMAGE_CHOICE_2, etc.). Choose ALL correct image choices that answer the question. Return ONLY the label(s) of your choice(s) (e.g., "IMAGE_CHOICE_1" or "IMAGE_CHOICE_1,IMAGE_CHOICE_2"), nothing else.\n\nQuestion: ${question}\n\nAvailable choices: ${choices.join(', ')}\n\nYour answer (label(s) only):`;
+                } else {
+                    prompt = `Look at the images provided in the question. Then look at the choice images. Each choice image is labeled (IMAGE_CHOICE_1, IMAGE_CHOICE_2, etc.). Choose EXACTLY ONE image choice that best answers the question. Return ONLY the label of your choice (e.g., "IMAGE_CHOICE_1"), nothing else.\n\nQuestion: ${question}\n\nAvailable choices: ${choices.join(', ')}\n\nYour answer (one label only):`;
+                }
+                log(`📋 Image choice question with ${imageChoices.length} image options`);
+            } else if (isMultipleSelect) {
+                prompt = `Answer this question by choosing ALL correct options from the following list. If there is only one correct answer, return just that one. If there are multiple correct answers, return them separated by commas. Return ONLY the exact text of your choice(s), nothing else.\n\nQuestion: ${question}\n\nOptions:\n${choices.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nYour answer(s) (comma-separated if multiple):`;
+                log(`📋 Multiple SELECT detected with ${choices.length} options`);
+            } else {
+                prompt = `Answer this question by choosing EXACTLY ONE of the following options. Return ONLY the exact text of your choice, nothing else.\n\nQuestion: ${question}\n\nOptions:\n${choices.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nYour answer (choose one exact option):`;
+                log(`📋 Single choice detected with ${choices.length} options`);
+            }
+        } else {
+            prompt = `Answer directly and concisely. ONLY the final answer: ${question}`;
+        }
+        
+        try {
+            const totalImages = questionImages.length + choiceImages.length;
+            log(`🚀 Sending to Gemini${totalImages > 0 ? ' with ' + totalImages + ' image(s)' : ''}...`);
+            
+            // Build the content array with text and images
+            const contentParts = [{ text: prompt }];
+            
+            // Only add images if they exist and are valid
+            if (questionImages.length > 0) {
+                // Verify images have valid data before adding
+                const validQuestionImages = questionImages.filter(img => 
+                    img.inlineData && img.inlineData.data && img.inlineData.data.length > 0
+                );
+                if (validQuestionImages.length > 0) {
+                    contentParts.push(...validQuestionImages);
+                    log(`📸 Added ${validQuestionImages.length} question image(s)`);
+                }
+            }
+            
+            // Add choice images with their context only if valid
+            if (choiceImages.length > 0 && hasImageChoices) {
+                const validChoiceImages = choiceImages.filter(img => 
+                    img.inlineData && img.inlineData.data && img.inlineData.data.length > 0
+                );
+                if (validChoiceImages.length > 0) {
+                    contentParts.push({ text: "\n\nHere are the choice images:" });
+                    imageChoices.forEach((choice, index) => {
+                        if (index < validChoiceImages.length) {
+                            contentParts.push({ text: `\n${choice.label}:` });
+                            contentParts.push(validChoiceImages[index]);
+                        }
+                    });
+                    log(`🖼️ Added ${validChoiceImages.length} choice image(s)`);
+                }
+            }
+            
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: contentParts }],
+                    generationConfig: { temperature: 0, maxOutputTokens: 8192 }
+                })
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                if (res.status === 429 || errText.includes("RESOURCE_EXHAUSTED") || errText.includes("quota")) {
+                    keyErrorCount[apiKey] = (keyErrorCount[apiKey] || 0) + 1;
+                    if (keyErrorCount[apiKey] >= 5) {
+                        log(`🗑️ Removing bad key after 5 failures: ${apiKey.slice(0, 5)}...${apiKey.slice(-5)}`);
+                        apiKeysCache = apiKeysCache.filter(k => k !== apiKey);
+                        delete keyErrorCount[apiKey];
+                        if (apiKeysCache.length === 0) {
+                            log("❌ All keys exhausted. Fetching fresh keys...");
+                            await fetchKeyFromGitHub(true);
+                        }
+                    }
+                    throw new Error("Try again, this is something on our end");
+                }
+                throw new Error(`HTTP ${res.status}: ${errText}`);
+            }
+
+            keyErrorCount[apiKey] = 0;
+            const data = await res.json();
+            let answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            answer = answer.trim().replace(/^\$(.*?)\$/, "$1").trim();
+            
+            log(`📝 Raw Gemini response: "${answer}"`);
+            
+            // Remove any leading numbers and periods (e.g., "2. answer" -> "answer")
+            answer = answer.replace(/^\d+\.\s*/, '');
+
+            // If multiple choice, try to match answer to one of the choices
+            if (choices && choices.length > 0) {
+                log(`🔍 Trying to match answer against ${choices.length} choices`);
+                log(`🔍 Is multiple select: ${isMultipleSelect}`);
+                
+                if (isMultipleSelect) {
+                    // Split by comma, newline, or "and" to get multiple answers
+                    const answers = answer.split(/,|\n|and /i).map(a => a.trim().replace(/^\d+\.\s*/, '')).filter(a => a.length > 0);
+                    log(`🔍 Split into ${answers.length} answer(s): ${JSON.stringify(answers)}`);
+                    
+                    const matchedChoices = [];
+                    
+                    answers.forEach(ans => {
+                        log(`🔍 Trying to match: "${ans}"`);
+                        
+                        // Try exact match first
+                        let matchedChoice = choices.find(choice => 
+                            choice.trim() === ans.trim() ||
+                            choice.toLowerCase().trim() === ans.toLowerCase().trim()
+                        );
+                        
+                        if (matchedChoice) {
+                            log(`✅ Exact match found: "${matchedChoice}"`);
+                        }
+                        
+                        // If no exact match, try fuzzy matching
+                        if (!matchedChoice) {
+                            matchedChoice = choices.find(choice => 
+                                choice.toLowerCase().includes(ans.toLowerCase()) ||
+                                ans.toLowerCase().includes(choice.toLowerCase())
+                            );
+                            if (matchedChoice) {
+                                log(`✅ Fuzzy match found: "${matchedChoice}"`);
+                            }
+                        }
+                        
+                        // If still no match, try matching significant words (more than 3 chars)
+                        if (!matchedChoice) {
+                            const ansWords = ans.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                            matchedChoice = choices.find(choice => {
+                                const choiceWords = choice.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                                const matchCount = ansWords.filter(w => choiceWords.some(cw => cw.includes(w) || w.includes(cw))).length;
+                                return matchCount >= Math.min(3, ansWords.length); // Match at least 3 words or all words if less
+                            });
+                            if (matchedChoice) {
+                                log(`✅ Word-based match found: "${matchedChoice}"`);
+                            }
+                        }
+                        
+                        if (matchedChoice && !matchedChoices.includes(matchedChoice)) {
+                            matchedChoices.push(matchedChoice);
+                        } else if (!matchedChoice) {
+                            log(`❌ No match found for: "${ans}"`);
+                        }
+                    });
+                    
+                    if (matchedChoices.length > 0) {
+                        const result = matchedChoices.join(',');
+                        log(`✅ Gemini answer matched to ${matchedChoices.length} choice(s): ${result}`);
+                        return result;
+                    } else {
+                        log(`⚠️ Gemini answers didn't match any choices, using as-is: ${answer}`);
+                    }
+                } else {
+                    // Try exact match first
+                    let matchedChoice = choices.find(choice => 
+                        choice.trim() === answer.trim() ||
+                        choice.toLowerCase().trim() === answer.toLowerCase().trim()
+                    );
+                    
+                    // If no exact match, try fuzzy matching
+                    if (!matchedChoice) {
+                        matchedChoice = choices.find(choice => 
+                            choice.toLowerCase().includes(answer.toLowerCase()) ||
+                            answer.toLowerCase().includes(choice.toLowerCase())
+                        );
+                    }
+                    
+                    // If still no match, try matching significant words
+                    if (!matchedChoice) {
+                        const ansWords = answer.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                        matchedChoice = choices.find(choice => {
+                            const choiceWords = choice.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                            const matchCount = ansWords.filter(w => choiceWords.some(cw => cw.includes(w) || w.includes(cw))).length;
+                            return matchCount >= Math.min(3, ansWords.length);
+                        });
+                    }
+                    
+                    if (matchedChoice) {
+                        log(`✅ Gemini answer matched to choice: ${matchedChoice}`);
+                        return matchedChoice;
+                    } else {
+                        log(`⚠️ Gemini answer didn't match any choice, using as-is: ${answer}`);
+                    }
+                }
+            }
+
+            log(`✅ Gemini answer received: ${answer}`);
+            return answer;
+        } catch (err) {
+            log(`❌ Gemini error: ${err.message}`);
+            return null;
+        }
+    }
+
+    // ---------------- Validate Response ----------------
+    function isValidResponse(answer) {
+        if (!answer || typeof answer !== 'string') return false;
+        const t = answer.trim().toLowerCase();
+        return t.length > 0 && !["no text", "error", "quota", "blocked", "limit", "unknown", "submit", "answer"].some(p => t.includes(p));
+    }
+
+    // ---------------- Fill Answer ----------------
+    async function fillAnswer(answer) {
+        const input = document.querySelector("input[type='text'], input[type='number']");
+        
+        if (input && isValidResponse(answer)) {
+            input.value = answer;
+            ["input","change"].forEach(evt => input.dispatchEvent(new Event(evt, { bubbles: true })));
+            log(`✅ Filled input with: ${answer}`);
+            lastKnownText = getTargetElementText();
+            return true;
+        }
+
+        // Check if this is a multiple select question
+        const choicesData = getAvailableChoices();
+        const isMultipleSelect = choicesData.isMultipleSelect;
+        
+        // Split answers ONLY if multiple select, otherwise treat as single answer
+        const answers = isMultipleSelect ? answer.split(',').map(a => a.trim()) : [answer];
+        
+        if (isMultipleSelect) {
+            log(`🎯 Processing ${answers.length} answer(s): ${answers.join(', ')}`);
+        }
+        
+        const expectedClickCount = answers.length;
+
+        // ---------------- Handle image choices ----------------
+        let clickedCount = 0;
+        for (const singleAnswer of answers) {
+            // Check if this is an image choice label
+            if (singleAnswer.startsWith('IMAGE_CHOICE_')) {
+                const targetElement = imageChoiceMap[singleAnswer];
+                if (targetElement) {
+                    log(`🖼️ Found image choice: ${singleAnswer}`);
+                    
+                    // Check if mobile or desktop
+                    const isMobile = (targetElement.className && targetElement.className.includes('mobile')) || 
+                                     (targetElement.querySelector && targetElement.querySelector('.SelectableTile.mobile'));
+                    
+                    if (isMobile) {
+                        const actualTarget = targetElement.querySelector('.SelectableTile.mobile') || targetElement;
+                        const rect = actualTarget.getBoundingClientRect();
+                        const x = rect.left + rect.width / 2;
+                        const y = rect.top + rect.height / 2;
+
+                        await new Promise(resolve => setTimeout(() => {
+                            const touch = new Touch({
+                                identifier: Date.now(),
+                                target: actualTarget,
+                                clientX: x,
+                                clientY: y,
+                                radiusX: 2.5,
+                                radiusY: 2.5,
+                                rotationAngle: 0,
+                                force: 0.5
+                            });
+                            actualTarget.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [touch], targetTouches: [touch], changedTouches: [touch] }));
+                            actualTarget.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [touch] }));
+                            log(`📱 Clicked mobile image choice: ${singleAnswer}`);
+                            clickedCount++;
+                            resolve();
+                        }, 50));
+                    } else {
+                        const rect = targetElement.getBoundingClientRect();
+                        const x = rect.left + rect.width / 2;
+                        const y = rect.top + rect.height / 2;
+
+                        const pointerEventConfig = {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                            clientX: x,
+                            clientY: y,
+                            pointerId: 1,
+                            pointerType: 'mouse',
+                            isPrimary: true,
+                            button: 0,
+                            buttons: 1
+                        };
+
+                        await new Promise(resolve => setTimeout(() => {
+                            targetElement.dispatchEvent(new PointerEvent('pointerenter', pointerEventConfig));
+                            targetElement.dispatchEvent(new PointerEvent('pointerover', pointerEventConfig));
+                            targetElement.dispatchEvent(new PointerEvent('pointermove', pointerEventConfig));
+                            targetElement.dispatchEvent(new PointerEvent('pointerdown', pointerEventConfig));
+                            targetElement.dispatchEvent(new PointerEvent('pointerup', { ...pointerEventConfig, buttons: 0 }));
+                            targetElement.dispatchEvent(new MouseEvent('click', pointerEventConfig));
+                            log(`🖱️ Clicked desktop image choice: ${singleAnswer}`);
+                            clickedCount++;
+                            resolve();
+                        }, 50));
+                    }
+                    continue;
+                } else {
+                    log(`🔴 Image choice element not found for: ${singleAnswer}`);
+                }
+            }
+        }
+
+        // If we clicked image choices, submit and return
+        if (clickedCount > 0) {
+            const submitContainer = document.querySelector(".yui3-widget-ft.fade-in");
+            if (submitContainer) {
+                const submitBtn = Array.from(submitContainer.children).find(
+                    child => child.innerText.trim() === "Submit"
+                );
+                if (submitBtn) {
+                    submitBtn.click();
+                    log(`✅ Submit button clicked after selecting ${clickedCount} image(s)`);
+                } else {
+                    log("🟡 Submit button not found inside container");
+                }
+            } else {
+                log("🟡 Submit container not found: .yui3-widget-ft.fade-in");
+            }
+
+            lastKnownText = getTargetElementText();
+            return true;
+        }
+
+        // ---------------- Multiple-choice handling (GriddyLayout or VerticalLayout) ----------------
+        let container = document.querySelector(".GriddyLayout.TOP");
+        let layoutType = "GriddyLayout";
+        
+        // If GriddyLayout not found, try VerticalLayout
+        if (!container) {
+            container = document.querySelector(".VerticalLayout");
+            layoutType = "VerticalLayout";
+        }
+        
+        if (container) {
+            const children = Array.from(container.children);
+
+            // For each answer, find and click the corresponding element
+            for (const singleAnswer of answers) {
+                // Normalize the answer for better matching
+                const normalizedAnswer = singleAnswer.trim().replace(/\s+/g, ' ');
+                
+                // Find the child that contains the answer text - EXACT MATCH ONLY
+                const target = children.find(child => {
+                    // Get the direct text content using innerText (which concatenates all text nodes)
+                    const childText = child.innerText.trim().replace(/\s+/g, ' ');
+                    
+                    // Also get text by walking through all text nodes (like getQuestionText does)
+                    let walkedText = "";
+                    function walkText(node) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const t = node.textContent.trim();
+                            if (t && t !== "Submit") {
+                                walkedText += t + " ";
+                            }
+                        } else if (node.nodeType === Node.ELEMENT_NODE) {
+                            const tag = node.tagName?.toLowerCase();
+                            if (tag === "style" || tag === "script") return;
+                            node.childNodes.forEach(walkText);
+                        }
+                    }
+                    walkText(child);
+                    walkedText = walkedText.trim().replace(/\s+/g, ' ');
+                    
+                    // Check both methods for exact match
+                    const exactMatchInnerText = childText === normalizedAnswer;
+                    const exactMatchWalked = walkedText === normalizedAnswer;
+                    
+                    if (exactMatchInnerText || exactMatchWalked) {
+                        console.log(`[DEBUG] Found EXACT match in ${layoutType} child:`, child);
+                        console.log("[DEBUG] innerText:", childText);
+                        console.log("[DEBUG] walked text:", walkedText);
+                        console.log("[DEBUG] Looking for:", normalizedAnswer);
+                    }
+                    return exactMatchInnerText || exactMatchWalked;
+                });
+
+                if (target) {
+                    // Check if this child has "mobile" in its class or has SelectableTile with mobile class
+                    const isMobile = (target.className && target.className.includes('mobile')) || 
+                                     (target.querySelector && target.querySelector('.SelectableTile.mobile'));
+                    
+                    if (isMobile) {
+                        log(`📱 Mobile tile detected in ${layoutType} child`);
+                        
+                        // If it's a SelectableTile, use that as the actual target
+                        const actualTarget = target.querySelector('.SelectableTile.mobile') || target;
+                        
+                        const rect = actualTarget.getBoundingClientRect();
+                        const x = rect.left + rect.width / 2;
+                        const y = rect.top + rect.height / 2;
+
+                        await new Promise(resolve => setTimeout(() => {
+                            // Use Touch events for mobile
+                            const touch = new Touch({
+                                identifier: Date.now(),
+                                target: actualTarget,
+                                clientX: x,
+                                clientY: y,
+                                radiusX: 2.5,
+                                radiusY: 2.5,
+                                rotationAngle: 0,
+                                force: 0.5
+                            });
+                            actualTarget.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [touch], targetTouches: [touch], changedTouches: [touch] }));
+                            actualTarget.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [touch] }));
+                            log(`📱 Clicked mobile tile with Touch events: "${singleAnswer}"`);
+                            clickedCount++;
+                            resolve();
+                        }, 50));
+
+                    } else {
+                        log(`🖥️ Desktop layout detected in ${layoutType}`);
+                        
+                        const rect = target.getBoundingClientRect();
+                        const x = rect.left + rect.width / 2;
+                        const y = rect.top + rect.height / 2;
+
+                        const pointerEventConfig = {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                            clientX: x,
+                            clientY: y,
+                            pointerId: 1,
+                            pointerType: 'mouse',
+                            isPrimary: true,
+                            button: 0,
+                            buttons: 1
+                        };
+
+                        await new Promise(resolve => setTimeout(() => {
+                            target.dispatchEvent(new PointerEvent('pointerenter', pointerEventConfig));
+                            target.dispatchEvent(new PointerEvent('pointerover', pointerEventConfig));
+                            target.dispatchEvent(new PointerEvent('pointermove', pointerEventConfig));
+                            target.dispatchEvent(new PointerEvent('pointerdown', pointerEventConfig));
+                            target.dispatchEvent(new PointerEvent('pointerup', { ...pointerEventConfig, buttons: 0 }));
+                            target.dispatchEvent(new MouseEvent('click', pointerEventConfig));
+                            log(`🖱️ Clicked parent element containing text: "${singleAnswer}"`);
+                            clickedCount++;
+                            resolve();
+                        }, 50));
+                    }
+                } else {
+                    log(`🟡 No child of ${layoutType} has a descendant with EXACT text: "${singleAnswer}"`);
+                    if (isMultipleSelect) {
+                        log(`🔍 Available options: ${children.map(c => c.innerText.trim()).join(', ')}`);
+                    }
+                }
+            }
+
+            // Only submit if ALL expected answers were clicked
+            if (clickedCount === expectedClickCount && clickedCount > 0) {
+                // Add a small delay to ensure all clicks are processed
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const submitContainer = document.querySelector(".yui3-widget-ft.fade-in");
+                if (submitContainer) {
+                    const submitBtn = Array.from(submitContainer.children).find(
+                        child => child.innerText.trim() === "Submit"
+                    );
+                    if (submitBtn) {
+                        submitBtn.click();
+                        log(`✅ Submit button clicked after selecting all ${clickedCount} answer(s)`);
+                    } else {
+                        log("🟡 Submit button not found inside container");
+                    }
+                } else {
+                    log("🟡 Submit container not found: .yui3-widget-ft.fade-in");
+                }
+
+                lastKnownText = getTargetElementText();
+                return true;
+            } else if (clickedCount < expectedClickCount) {
+                log(`❌ Only clicked ${clickedCount}/${expectedClickCount} answers. Not submitting.`);
+                return false;
+            } else if (isMultipleSelect) {
+                log(`🔍 Available options: ${children.map(c => c.innerText.trim()).join(', ')}`);
+            }
+        } else {
+            log("🟡 Container not found: Neither .GriddyLayout.TOP nor .VerticalLayout");
+        }
+
+        return false;
+    }
+
+    // ---------------- Main Logic ----------------
+    async function processQuestion(retryCount = 0) {
+        const MAX_RETRIES = 5;
+        
+        if (isProcessing && retryCount === 0) {
+            log("⏸️ Already processing, skipping...");
+            return;
+        }
+        
+        if (retryCount === 0) {
+            isProcessing = true;
+        }
+
+        try {
+            apiChange++;
+            const question = getQuestionText();
+            if (!question) {
+                if (autoModeActive && retryCount < MAX_RETRIES) {
+                    log(`⚠️ No question found, retrying in 2s... (${retryCount + 1}/${MAX_RETRIES})`);
+                    await new Promise(r => setTimeout(r, 2000));
+                    return processQuestion(retryCount + 1);
+                }
+                return;
+            }
+
+            log(`📄 QUESTION FOUND:\n${question}`);
+
+            API_KEY = await fetchKeyFromGitHub();
+            if (!API_KEY) {
+                if (autoModeActive && retryCount < MAX_RETRIES) {
+                    log(`⚠️ Failed to get API key, retrying in 2s... (${retryCount + 1}/${MAX_RETRIES})`);
+                    await new Promise(r => setTimeout(r, 2000));
+                    return processQuestion(retryCount + 1);
+                }
+                return;
+            }
+
+            const answer = await getAnswerFromGemini(question, API_KEY);
+            if (!answer) {
+                if (autoModeActive && retryCount < MAX_RETRIES) {
+                    log(`⚠️ Failed to get answer from Gemini, retrying in 2s... (${retryCount + 1}/${MAX_RETRIES})`);
+                    await new Promise(r => setTimeout(r, 2000));
+                    return processQuestion(retryCount + 1);
+                }
+                return;
+            }
+
+            const submitted = await fillAnswer(answer);
+            
+            if (!submitted && autoModeActive && retryCount < MAX_RETRIES) {
+                log(`⚠️ Failed to submit answer, retrying in 2s... (${retryCount + 1}/${MAX_RETRIES})`);
+                await new Promise(r => setTimeout(r, 2000));
+                return processQuestion(retryCount + 1);
+            }
+
+            if (autoModeActive && submitted) {
+                const changed = await waitForTextChange(lastKnownText);
+                if (changed) {
+                    await new Promise(r => setTimeout(r, 1500));
+                    log("🔄 Processing next question...");
+                    isProcessing = false;
+                    processQuestion();
+                    return;
+                }
+            }
+        } catch (err) {
+            log(`❌ Unexpected error: ${err.message}`);
+            if (autoModeActive && retryCount < MAX_RETRIES) {
+                log(`⚠️ Retrying due to error... (${retryCount + 1}/${MAX_RETRIES})`);
+                await new Promise(r => setTimeout(r, 2000));
+                return processQuestion(retryCount + 1);
+            }
+        } finally {
+            if (!autoModeActive) isProcessing = false;
+        }
+    }
+
+    // ---------------- Sync checkbox with auto mode state ----------------
+    function syncCheckboxState() {
+        const checkbox = document.getElementById("appleCheckbox");
+        if (checkbox) {
+            checkbox.checked = autoModeActive;
+        }
+    }
+
+    // ---------------- Key Listeners ----------------
+    window.addEventListener("keydown", (e) => {
+        const key = e.key.toLowerCase();
+        if (key === "c" || key === "y") {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        if (key === "c" && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            log("⌨️ 'C' pressed — fetching new key and answering...");
+            processQuestion();
+        }
+        if (key === "y" && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            autoModeActive = !autoModeActive;
+            syncCheckboxState();
+            
+            if (autoModeActive) {
+                log("🤖 Auto mode: ON. Will process next question.");
+                const status = document.createElement("div");
+                status.id = "__auto_status";
+                status.style.cssText = "position:fixed;top:10px;left:10px;background:green;color:white;padding:4px 8px;border-radius:5px;z-index:99999;";
+                status.textContent = "AUTO: ON";
+                document.body.appendChild(status);
+                
+                setTimeout(() => {
+                    isProcessing = false;
+                    processQuestion();
+                }, 500);
+            } else {
+                log("🤖 Auto mode: OFF");
+                isProcessing = false;
+                const status = document.getElementById("__auto_status");
+                if (status) status.remove();
+            }
+        }
+    }, true);
+
+    log("✅ Helper ready. Press 'C' to get answer. Press 'Y' to toggle auto mode.");
+})();
+
+// Initialize GUI
+createtermkClientGUI();
