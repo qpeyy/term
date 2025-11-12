@@ -1,5 +1,7 @@
+// paste in DevTools console
 (async () => {
-  const key = 'proj-Aixptc7m7JaQdtAQ_ulGSn9jYfo73LPdRKX_jm2yRxAcascjbMf_9AlilAB3ezuYLMnSYNXeulT3BlbkFJHnaj9251a-Mtmslu25mbLs5cm8k9R7URCCUqoLjCjcBSLI5ahewwYHiJhpc8MLdIEcydRW0vMA';
+  let key = prompt('proj-Aixptc7m7JaQdtAQ_ulGSn9jYfo73LPdRKX_jm2yRxAcascjbMf_9AlilAB3ezuYLMnSYNXeulT3BlbkFJHnaj9251a-Mtmslu25mbLs5cm8k9R7URCCUqoLjCjcBSLI5ahewwYHiJhpc8MLdIEcydRW0vMA').trim();
+  if (!key.startsWith('sk-')) key = 'sk-' + key;   // auto-prefix
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
